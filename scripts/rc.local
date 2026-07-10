@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# === REG DOMAIN & TX POWER ===
+iw reg set US
+
+# === WIFI TUNING (iw only, no wireless-tools) ===
+iw phy phy0 set distance 300
+iw phy phy0 set txpower fixed 2100
+iw phy phy0 set retry short 2 long 1
+iw wlan0 set power_save off 2>/dev/null
+
+# === TX QUEUE ===
+ip link set eth0 txqueuelen 1000
+iw phy phy0 set txq quantum 8192
+iw phy phy0 set txq limit 64
+
+# === CONNTRACK ===
+echo 4096 > /sys/module/nf_conntrack/parameters/hashsize
+echo 16384 > /proc/sys/net/netfilter/nf_conntrack_max
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_fin_wait
+echo 30 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+
+# === NETDEV (LOW LATENCY) ===
+echo 2000 > /proc/sys/net/core/netdev_budget_usecs
+echo 10000 > /proc/sys/net/core/netdev_max_backlog
+echo 300 > /proc/sys/net/core/netdev_budget
+
+# === TCP OPTIMIZATIONS ===
+echo 1 > /proc/sys/net/ipv4/tcp_ecn
+echo 8192 > /proc/sys/net/ipv4/tcp_max_syn_backlog
+echo 1024 > /proc/sys/net/core/somaxconn
+echo 262144 > /proc/sys/net/ipv4/tcp_max_tw_buckets
+echo 8192 > /proc/sys/net/ipv4/tcp_max_orphans
+echo 5 > /proc/sys/net/ipv4/tcp_retries2
+echo 30 > /proc/sys/net/ipv4/tcp_keepalive_time
+echo 10 > /proc/sys/net/ipv4/tcp_keepalive_intvl
+echo 1 > /proc/sys/net/ipv4/tcp_orphan_retries
+echo -2 > /proc/sys/net/ipv4/tcp_adv_win_scale
+echo 65536 > /proc/sys/net/core/optmem_max
+echo 8192 > /proc/sys/net/ipv4/udp_rmem_min
+echo 8192 > /proc/sys/net/ipv4/udp_wmem_min
+echo "1024 65535" > /proc/sys/net/ipv4/ip_local_port_range
+
+# === ARP ===
+echo 512 > /proc/sys/net/ipv4/neigh/default/gc_thresh1
+echo 2048 > /proc/sys/net/ipv4/neigh/default/gc_thresh2
+echo 4096 > /proc/sys/net/ipv4/neigh/default/gc_thresh3
+
+# === KERNEL PRINTK ===
+echo 1 > /proc/sys/kernel/printk
+
+iptables -t mangle -F PREROUTING
+iptables -t mangle -F POSTROUTING
+. /etc/firewall.user
+
+# === BUFFERBLOAT FIXES ===
+sleep 5
+echo 131072 > /sys/class/net/wlan0/queues/tx-0/byte_queue_limits/limit
+ifconfig wlan0 txqueuelen 50
+tc qdisc add dev wlan0 root fq_codel limit 100 target 5ms interval 100ms ecn 2>/dev/null
+
+# === CAKE-AUTORATE-LITE ===
+/usr/bin/cake-autorate-lite.sh > /tmp/cake-autorate.log 2>&1 &
+exit 0

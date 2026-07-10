@@ -1,0 +1,25 @@
+# === UPLOAD: ALL → AF41 first, then VoIP overwrites to EF ===
+iptables -t mangle -A POSTROUTING -o eth1 -j DSCP --set-dscp-class af41
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 3478:3481 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 5222:5242 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 10000:20000 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 19302 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 19305 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 19307 -j DSCP --set-dscp-class ef
+iptables -t mangle -A POSTROUTING -o eth1 -p udp --dport 49152:65535 -j DSCP --set-dscp-class ef
+
+# === DOWNLOAD: ALL → AF41 first, then VoIP overwrites to EF ===
+iptables -t mangle -A PREROUTING -i eth1 -j DSCP --set-dscp-class af41
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 3478:3481 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 5222:5242 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 10000:20000 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 19302 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 19305 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 19307 -j DSCP --set-dscp-class ef
+iptables -t mangle -A PREROUTING -i eth1 -p udp --sport 49152:65535 -j DSCP --set-dscp-class ef
+
+# === SECURITY ===
+iptables -A INPUT -p icmp --icmp-type echo-request -m limit --limit 10/sec -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+iptables -A FORWARD -m conntrack --ctstate INVALID -j DROP

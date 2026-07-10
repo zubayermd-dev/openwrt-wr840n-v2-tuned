@@ -1,0 +1,8 @@
+#!/bin/sh
+# Bufferbloat fixes - run when interface comes up
+[ "$ACTION" = ifup ] || exit 0
+[ "$INTERFACE" = wlan0 ] || exit 0
+sleep 3
+echo 131072 > /sys/class/net/wlan0/queues/tx-0/byte_queue_limits/limit
+ifconfig wlan0 txqueuelen 50
+tc qdisc add dev wlan0 root fq_codel limit 100 target 5ms interval 100ms ecn 2>/dev/null

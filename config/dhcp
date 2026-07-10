@@ -1,0 +1,53 @@
+
+config dnsmasq
+	option domainneeded '1'
+	option boguspriv '1'
+	option localise_queries '1'
+	option rebind_protection '1'
+	option rebind_localhost '1'
+	option local '/lan/'
+	option domain 'lan'
+	option expandhosts '1'
+	option nonegcache '0'
+	option authoritative '1'
+	option readethers '1'
+	option leasefile '/tmp/dhcp.leases'
+	option resolvfile '/tmp/resolv.conf.auto'
+	option nonwildcard '1'
+	option localservice '1'
+	option filterwin2k '1'
+	option minport '4096'
+	option maxport '65535'
+	option noresolv '1'
+	option mincachettl '3600'
+	option negttl '300'
+	option cachesize '10000'
+	option cache_max_ttl '86400'
+	option dns_forward_max '500'
+	list server '1.1.1.1'
+	list server '1.0.0.1'
+	list server '8.8.8.8'
+
+config dhcp 'lan'
+	option interface 'lan'
+	option leasetime '12h'
+	option dhcpv6 'disabled'
+	option ra 'disabled'
+	option start '2'
+	option limit '50'
+	option dynamicdhcp '1'
+
+config dhcp 'wan'
+	option interface 'wan'
+	option ignore '1'
+
+config host
+	option mac 'XX:XX:XX:XX:XX:XX'
+	option ip '192.168.2.XX'
+	option name 'device1'
+
+config host
+	option mac 'XX:XX:XX:XX:XX:XX'
+	option ip '192.168.2.XX'
+	option name 'device2'
+
